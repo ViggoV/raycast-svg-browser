@@ -5,7 +5,7 @@
   "title": "SVG Browser",
   "description": "Browse a folder of SVG files.",
   "icon": "icon.png",
-  "author": "vef",
+  "author": "ViggoV",
   "license": "MIT",
   "commands": [
     {
