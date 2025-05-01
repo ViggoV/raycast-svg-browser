@@ -7,10 +7,7 @@
 
 /* eslint-disable @typescript-eslint/ban-types */
 
-type ExtensionPreferences = {
-  /** SVG Folder Path - Path to the folder containing your SVG files (e.g., ~/Assets/Icons or /Users/me/Projects/MyProject/src/assets) */
-  "svgFolderPath": string
-}
+type ExtensionPreferences = {}
 
 /** Preferences accessible in all the extension's commands */
 declare type Preferences = ExtensionPreferences
@@ -18,10 +15,14 @@ declare type Preferences = ExtensionPreferences
 declare namespace Preferences {
   /** Preferences accessible in the `browseSVGs` command */
   export type BrowseSVGs = ExtensionPreferences & {}
+  /** Preferences accessible in the `manageSVGFolders` command */
+  export type ManageSVGFolders = ExtensionPreferences & {}
 }
 
 declare namespace Arguments {
   /** Arguments passed to the `browseSVGs` command */
   export type BrowseSVGs = {}
+  /** Arguments passed to the `manageSVGFolders` command */
+  export type ManageSVGFolders = {}
 }
 

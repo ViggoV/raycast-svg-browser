@@ -1,23 +1,38 @@
-import { Grid, Icon, ActionPanel, Action } from '@raycast/api'
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
+import { Grid, Icon, ActionPanel, Action, LocalStorage } from '@raycast/api'
 import { loadFiles, GroupedFiles } from './file-loader'
-import { readFileSync } from 'fs' // Import readFileSync
+import { readFileSync } from 'fs'
+import { FolderEntry, STORAGE_KEY } from './manageSVGFolders'
 
-export default function Command() {
+export default function Command(): React.JSX.Element {
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const [error, setError] = useState<string | null>(null)
-  const [folderPath, setFolderPath] = useState<string | null>(null)
   const [groupedFiles, setGroupedFiles] = useState<GroupedFiles>({})
+  const [folders, setFolders] = useState<FolderEntry[]>([])
 
   useEffect(() => {
     async function loadData() {
+      setIsLoading(true)
+      setError(null) // Reset error state
       try {
-        const { files: loadedFiles, resolvedPath } = await loadFiles()
-        setGroupedFiles(loadedFiles)
-        setFolderPath(resolvedPath)
+        const storedFolders = await LocalStorage.getItem<string>(STORAGE_KEY)
+        const loadedFolders: FolderEntry[] = storedFolders
+          ? JSON.parse(storedFolders)
+          : []
+        setFolders(loadedFolders)
+
+        if (loadedFolders.length > 0) {
+          const folderPaths = loadedFolders.map((folder) => folder.path)
+          const { files: loadedFiles } = await loadFiles(folderPaths)
+          setGroupedFiles(loadedFiles)
+        } else {
+          setGroupedFiles({}) // Clear files if no folders are configured
+        }
+
+        // Remove setFolderPath call
       } catch (err: any) {
-        console.error('Error loading files:', err)
-        setError(err.message || 'Failed to load files.')
+        console.error('Error loading data:', err)
+        setError(err.message || 'Failed to load data.')
       } finally {
         setIsLoading(false)
       }
@@ -56,7 +71,7 @@ export default function Command() {
                       <Action.CopyToClipboard
                         title="Copy Path"
                         content={file.fullPath}
-                        shortcut={{ modifiers: ['cmd', 'opt'], key: 'p' }} // Changed shortcut
+                        shortcut={{ modifiers: ['cmd', 'opt'], key: 'p' }}
                       />
                       <Action.CopyToClipboard
                         title="Copy SVG Content"
@@ -78,8 +93,27 @@ export default function Command() {
           ))
         : !isLoading && (
             <Grid.EmptyView
-              title="No SVG files found"
-              description={`In folder: ${folderPath || ''}`}
+              title={
+                folders.length === 0
+                  ? 'No Folders Configured'
+                  : 'No SVG Files Found'
+              }
+              description={
+                folders.length === 0
+                  ? "Use the 'Manage SVG Folders' command to add folders."
+                  : 'No SVG files were found in the configured folders.'
+              }
+              actions={
+                folders.length === 0 ? (
+                  <ActionPanel>
+                    <Action.Open
+                      title="Open Manage Folders"
+                      target="raycast://extensions/ViggoV/svg-browser/manageSVGFolders"
+                      application="Raycast"
+                    />
+                  </ActionPanel>
+                ) : undefined
+              }
             />
           )}
     </Grid>
